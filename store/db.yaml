@@ -1,0 +1,11 @@
+version: '3.1'
+
+services:
+  dynamodb:
+    image: amazon/dynamodb-local
+    hostname: dynamodb
+    restart: always
+    volumes: 
+      - ./dynamodb-store:/home/dynamodblocal/data
+    ports:
+      - 8000:8000
