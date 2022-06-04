@@ -2,7 +2,7 @@ from flask import Flask, jsonify
 import boto3
 from datetime import datetime, timedelta
 
-
+# Temporary method for local Store
 DB_DICT = {}
 
 class User:
@@ -13,6 +13,13 @@ class User:
     @classmethod
     def fromString(cls, username, dob_string):
         return cls(username, datetime.strptime(dob_string, '%Y-%m-%d'))
+
+    @classmethod
+    def fromIsoformat(cls, username, dob_iso):
+        return cls(username, datetime.fromisoformat(dob_iso))
+
+    def toDict():
+        return {'username': '{self.username}', 'dob': '{self.dob.isoformat}'}
 
 app = Flask(__name__)
 db = boto3.client('dynamodb', endpoint_url='http://localhost:8000')
@@ -27,7 +34,11 @@ def dob_test():
 
     return jsonify(temp_dict)
 
+
+# Temporary methods for local key-value store
 def db_write(user: User):
-    d
-def db_read() -> User:
-    a
+    usr_dict = user.toDict()
+    DB_DICT[usr_dict['username']] = usr_dict['dob']
+    
+def db_read(username) -> User:
+    return User.fromIsoformat(username, DB_DICT[username])
