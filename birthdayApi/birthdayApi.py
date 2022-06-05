@@ -19,13 +19,19 @@ class User:
     def fromIsoformat(cls, username, dob_iso):
         return cls(username, datetime.fromisoformat(dob_iso))
 
-    def toDict():
-        return {'username': '{self.username}', 'dob': '{self.dob.isoformat}'}
+    def toDict(self):
+        return {'username': self.username, 'dob': self.dob.isoformat()}
 
-    def daysToBday(todayDate):
-        print()
-        # Strip 
-        
+    def daysToBday(self, today):
+        cur_year = today.year
+        temp_bday = self.dob.replace(year=cur_year)
+
+        if today.date() > temp_bday.date():
+            temp_bday = self.dob.replace(year=(cur_year+1))
+
+        bday_delta = temp_bday - today
+        return bday_delta.days
+
 
 
 app = Flask(__name__)
@@ -36,21 +42,28 @@ app = Flask(__name__)
 def updateUser(username):
     clean_usr = username # Replace w/ escape(username) to string
     usr_input = request.json
-    usr = User.fromString(clean_usr, usr_input["dateOfBirth"])
+    usr = User.fromString(clean_usr, usr_input['dateOfBirth'])
     db_write(usr)
     print(f'You have added the username {clean_usr} with dob {usr_input["dateOfBirth"]}')
+    print(f'Dict keys are: {usr.toDict()}')
     return "", 204
 
 @app.route('/hello/<username>', methods=['GET'])
 def getBirthday(username):
     clean_usr = username # Fix this
     usr_obj = db_read(clean_usr)
+    bday_delta = usr_obj.daysToBday(datetime.now())
+    if bday_delta < 1:
+        msg = {"message": f"Hello, {clean_usr}! Happy birthday!"}
+    else:
+        msg = {"message": f"Hello, {clean_usr}! Your birthday is in {bday_delta} day(s)"}
+    return jsonify(msg), 200
 
 
 # Temporary methods for local key-value store
 def db_write(user: User):
     usr_dict = user.toDict()
-    DB_DICT[usr_dict['username']] = usr_dict['dob']
+    DB_DICT[(usr_dict['username'])] = usr_dict['dob']
     
 def db_read(username) -> User:
     return User.fromIsoformat(username, DB_DICT[username])
