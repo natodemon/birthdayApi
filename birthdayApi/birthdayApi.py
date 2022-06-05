@@ -1,6 +1,7 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 import boto3
 from datetime import datetime, timedelta
+from markupsafe import escape
 
 # Temporary method for local Store
 DB_DICT = {}
@@ -21,18 +22,29 @@ class User:
     def toDict():
         return {'username': '{self.username}', 'dob': '{self.dob.isoformat}'}
 
+    def daysToBday(todayDate):
+        print()
+        # Strip 
+        
+
+
 app = Flask(__name__)
-db = boto3.client('dynamodb', endpoint_url='http://localhost:8000')
+#db = boto3.client('dynamodb', endpoint_url='http://localhost:8000')
 
-user = 'test_user'
-dob = '12/04/1993'
 
-@app.route('/')
-def dob_test():
-    temp_dict = {}
-    temp_dict['message'] = f'Hello {user}, your bday is {dob}'
+@app.route('/hello/<username>', methods=['PUT'])
+def updateUser(username):
+    clean_usr = username # Replace w/ escape(username) to string
+    usr_input = request.json
+    usr = User.fromString(clean_usr, usr_input["dateOfBirth"])
+    db_write(usr)
+    print(f'You have added the username {clean_usr} with dob {usr_input["dateOfBirth"]}')
+    return "", 204
 
-    return jsonify(temp_dict)
+@app.route('/hello/<username>', methods=['GET'])
+def getBirthday(username):
+    clean_usr = username # Fix this
+    usr_obj = db_read(clean_usr)
 
 
 # Temporary methods for local key-value store
