@@ -40,13 +40,11 @@ app = Flask(__name__)
 
 @app.route('/hello/<username>', methods=['PUT'])
 def updateUser(username):
-    username = escape(username)
-    clean_usr = str(username) # Replace w/ escape(username) to string
-    usr_input = request.json
-    usr = User.fromString(clean_usr, usr_input['dateOfBirth'])
+    clean_usr = escape(username)
+    usr_input = escape(request.json['dateOfBirth'])
+    
+    usr = User.fromString(str(clean_usr), str(usr_input))
     db_write(usr)
-    print(f'You have added the username {clean_usr} with dob {usr_input["dateOfBirth"]}')
-    print(f'Dict keys are: {usr.toDict()}')
     return "", 204
 
 @app.route('/hello/<username>', methods=['GET'])
