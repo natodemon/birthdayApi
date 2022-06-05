@@ -1,3 +1,4 @@
+from curses.ascii import isalpha
 from flask import Flask, jsonify, request
 import boto3
 from datetime import datetime, timedelta
@@ -13,7 +14,12 @@ class User:
 
     @classmethod
     def fromString(cls, username, dob_string):
-        return cls(username, datetime.strptime(dob_string, '%Y-%m-%d'))
+        dob = datetime.strptime(dob_string, '%Y-%m-%d')
+
+        if dob.date() < datetime.now().date():
+            return cls(username, dob)
+        else:
+            raise Exception('Date of birth cannot be in the future')
 
     @classmethod
     def fromIsoformat(cls, username, dob_iso):
@@ -22,7 +28,8 @@ class User:
     def toDict(self):
         return {'username': self.username, 'dob': self.dob.isoformat()}
 
-    def daysToBday(self, today):
+    def daysToBday(self):
+        today = datetime.now()
         cur_year = today.year
         temp_bday = self.dob.replace(year=cur_year)
 
@@ -40,12 +47,22 @@ app = Flask(__name__)
 
 @app.route('/hello/<username>', methods=['PUT'])
 def updateUser(username):
-    clean_usr = escape(username)
+    if not username.isalpha():
+        msg = {"message":"Username must only contain letters"}
+        statusCode = 400
+        return jsonify(msg), statusCode
+        
     usr_input = escape(request.json['dateOfBirth'])
     
-    usr = User.fromString(str(clean_usr), str(usr_input))
-    db_write(usr)
-    return "", 204
+    try:
+        usr = User.fromString(username, str(usr_input))
+        db_write(usr)
+        msg = ""
+        statusCode = 204
+    except:
+        msg = {"message":"Date of birth cannot be in the future"}
+        statusCode = 400
+    return jsonify(msg), statusCode
 
 @app.route('/hello/<username>', methods=['GET'])
 def getBirthday(username):
@@ -53,7 +70,7 @@ def getBirthday(username):
     clean_usr = str(username) # Fix this
     try:
         usr_obj = db_read(clean_usr)
-        bday_delta = usr_obj.daysToBday(datetime.now())
+        bday_delta = usr_obj.daysToBday()
         if bday_delta < 1:
             msg = {"message": f"Hello, {clean_usr}! Happy birthday!"}
         else:
