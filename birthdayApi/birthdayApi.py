@@ -51,7 +51,7 @@ def updateUser(username):
         msg = {"message":"Username must only contain letters"}
         statusCode = 400
         return jsonify(msg), statusCode
-        
+
     usr_input = escape(request.json['dateOfBirth'])
     
     try:
@@ -67,7 +67,7 @@ def updateUser(username):
 @app.route('/hello/<username>', methods=['GET'])
 def getBirthday(username):
     username = escape(username)
-    clean_usr = str(username) # Fix this
+    clean_usr = str(username)
     try:
         usr_obj = db_read(clean_usr)
         bday_delta = usr_obj.daysToBday()
