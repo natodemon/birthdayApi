@@ -59,7 +59,13 @@ def updateUser(username):
         db_write(usr)
         msg = ""
         statusCode = 204
-    except:
+    except ValueError as e:
+        print(e)
+        if 'does not match format' in str(e):
+            msg = {"message":"Date format is incorrect, please use the format YYYY-MM-DD"}
+            statusCode = 400
+    except Exception as e:
+        print(e)
         msg = {"message":"Date of birth cannot be in the future"}
         statusCode = 400
     return jsonify(msg), statusCode

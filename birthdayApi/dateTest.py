@@ -12,4 +12,6 @@ today = datetime.now()
 
 bob = today + timedelta(days=10)
 
-print(bob.date().isoformat())
+test = bob.date() - today.date()
+
+print(test.days)
