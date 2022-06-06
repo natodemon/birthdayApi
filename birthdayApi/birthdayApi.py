@@ -1,14 +1,17 @@
 from curses.ascii import isalpha
 from flask import Flask, jsonify, request
 import boto3
-from datetime import datetime, timedelta
+from datetime import datetime
 from markupsafe import escape
 import os
+from boto3.dynamodb.conditions import Key
 
 # Temporary method for local Store
-DB_DICT = {}
-DB_URL = ''
-DB_PORT = ''
+#DB_DICT = {}
+TABLE_NAME = 'user-records'
+
+db = boto3.resource('dynamodb', endpoint_url='http://localhost:8000', region_name='eu-west-1')
+table = db.Table(TABLE_NAME)
 
 class User:
     def __init__(self, username, dob):
@@ -30,7 +33,7 @@ class User:
         return cls(username, datetime.fromisoformat(dob_iso))
 
     def toDict(self):
-        return {'username': self.username, 'dob': self.dob.isoformat()}
+        return {'username': self.username, 'date.of.birth': self.dob.isoformat()}
 
     def daysToBday(self):
         today = datetime.now()
@@ -47,7 +50,6 @@ class User:
 
 
 app = Flask(__name__)
-#db = boto3.client('dynamodb', endpoint_url='http://localhost:8000')
 
 
 @app.route('/hello/<username>', methods=['PUT'])
@@ -95,13 +97,29 @@ def getBirthday(username):
 
 
 # Temporary methods for local key-value store
+# def db_write(user: User):
+#     usr_dict = user.toDict()
+#     DB_DICT[(usr_dict['username'])] = usr_dict['dob']
+    
+# def db_read(username) -> User:
+#     if username in DB_DICT:
+#         return User.fromIsoformat(username, DB_DICT[username])
+#     else:
+#         raise KeyError(f'User {username} not found in the DB')
+
+
 def db_write(user: User):
     usr_dict = user.toDict()
-    DB_DICT[(usr_dict['username'])] = usr_dict['dob']
+    table.put_item(Item=usr_dict)
     
 def db_read(username) -> User:
-    if username in DB_DICT:
-        return User.fromIsoformat(username, DB_DICT[username])
+    response = table.query(
+        KeyConditionExpression=Key('username').eq(username)
+    )
+    usr_data = response['Items']
+
+    if usr_data:
+        return User.fromIsoformat(username, usr_data[0]['date.of.birth'])
     else:
         raise KeyError(f'User {username} not found in the DB')
 
