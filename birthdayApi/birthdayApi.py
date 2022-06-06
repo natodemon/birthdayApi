@@ -9,8 +9,11 @@ from boto3.dynamodb.conditions import Key
 # Temporary method for local Store
 #DB_DICT = {}
 TABLE_NAME = 'user-records'
+DDB_URL = os.environ['DYNAMO_URL']
+DDB_PORT = os.environ['DYNAMO_PORT']
+REGION = os.environ['AWS_REGION']
 
-db = boto3.resource('dynamodb', endpoint_url='http://localhost:8000', region_name='eu-west-1')
+db = boto3.resource('dynamodb', endpoint_url=f'http://{DDB_URL}:{DDB_PORT}', region_name='eu-west-1')
 table = db.Table(TABLE_NAME)
 
 class User:
