@@ -3,9 +3,12 @@ from flask import Flask, jsonify, request
 import boto3
 from datetime import datetime, timedelta
 from markupsafe import escape
+import os
 
 # Temporary method for local Store
 DB_DICT = {}
+DB_URL = ''
+DB_PORT = ''
 
 class User:
     def __init__(self, username, dob):
@@ -22,6 +25,7 @@ class User:
             raise Exception('Date of birth cannot be in the future')
 
     @classmethod
+    # For use when loading from DB
     def fromIsoformat(cls, username, dob_iso):
         return cls(username, datetime.fromisoformat(dob_iso))
 
@@ -31,9 +35,10 @@ class User:
     def daysToBday(self):
         today = datetime.now()
         cur_year = today.year
-        temp_bday = self.dob.replace(year=cur_year)
+        temp_bday = self.dob.replace(year=cur_year) # Only the day & month are of interest
 
         if today.date() > temp_bday.date():
+            # User has already had their birthday this year, calc days until next
             temp_bday = self.dob.replace(year=(cur_year+1))
 
         bday_delta = temp_bday.date() - today.date()
@@ -99,3 +104,8 @@ def db_read(username) -> User:
         return User.fromIsoformat(username, DB_DICT[username])
     else:
         raise KeyError(f'User {username} not found in the DB')
+
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
