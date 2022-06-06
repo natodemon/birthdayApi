@@ -1,11 +1,22 @@
 version: '3.1'
 
 services:
-  dynamodb:
+  dynamodb-local:
     image: amazon/dynamodb-local
     hostname: dynamodb
     restart: always
+    container_name: dynamodb-local
     volumes: 
       - ./dynamodb-store:/home/dynamodblocal/data
     ports:
       - 8000:8000
+    command: '-jar DynamoDBLocal.jar -sharedDb - inMemory'
+
+  init-ddb:
+    build:
+      context: ddb_loader
+    depends_on: 
+      - dynamodb-local
+    environment:
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=notarealpassword
