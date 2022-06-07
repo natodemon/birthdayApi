@@ -6,8 +6,6 @@ from markupsafe import escape
 import os
 from boto3.dynamodb.conditions import Key
 
-# Temporary method for local Store
-#DB_DICT = {}
 TABLE_NAME = 'user-records'
 DDB_URL = os.environ['DYNAMO_URL']
 DDB_PORT = os.environ['DYNAMO_PORT']
@@ -96,20 +94,6 @@ def getBirthday(username):
         msg = {"message": f"Hello {clean_usr}, we do not seem to have your date of birth on record"}
         statusCode = 404
     return jsonify(msg), statusCode
-
-
-
-# Temporary methods for local key-value store
-# def db_write(user: User):
-#     usr_dict = user.toDict()
-#     DB_DICT[(usr_dict['username'])] = usr_dict['dob']
-    
-# def db_read(username) -> User:
-#     if username in DB_DICT:
-#         return User.fromIsoformat(username, DB_DICT[username])
-#     else:
-#         raise KeyError(f'User {username} not found in the DB')
-
 
 def db_write(user: User):
     usr_dict = user.toDict()
